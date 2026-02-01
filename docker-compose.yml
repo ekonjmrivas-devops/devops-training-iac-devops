@@ -1,0 +1,134 @@
+#version: "3.7"
+
+networks:
+  devops_training_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.236.0/24
+
+volumes:
+  # OPTIONAL (Practice 2): Uncomment when enabling the private Docker registry
+  # registry-data:
+  jenkins-data:
+  jenkins-docker-certs:
+  # OPTIONAL (Practice 2): Uncomment when enabling Artifactory
+  # artifactory-data:
+  # postgresql-vol:
+  # sonarqube-vol:
+
+services:
+
+  
+
+  # registry:
+  #   image: registry:2
+  #   ports:
+  #   - "5000:5000"
+  #   networks:
+  #     devops_training_net:
+  #       aliases: 
+  #         - local-registry
+  #   environment:
+  #     REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /data
+  #   volumes:
+  #     - registry-data:/data
+
+  dind:
+    image: docker:dind
+    privileged: true
+    restart: always
+    networks:
+      devops_training_net:
+        aliases: 
+          - docker
+    # OPTIONAL (Practice 2): if you enable the private registry (HTTP), also enable this to allow pushes.
+    # command:
+    #   - "--insecure-registry=local-registry:5000"
+    ports:
+      - 2376:2376
+    tty: true
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - jenkins-docker-certs:/certs/client
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+
+ 
+      
+  jenkins:
+    build: 
+      context: ./jenkins/.
+      dockerfile: Dockerfile
+    user: root
+    privileged: true
+    restart: on-failure
+    networks:
+      - devops_training_net
+    hostname: jenkins
+    ports:
+      - 8080:8080
+      - 50000:50000
+    depends_on:
+      - dind
+    tty: true
+    volumes:
+      - jenkins-data:/var/jenkins_home:rw
+      - jenkins-docker-certs:/certs/client:ro
+    environment:
+      - DOCKER_HOST=tcp://docker:2376
+      - DOCKER_CERT_PATH=/certs/client
+      - DOCKER_TLS_VERIFY=1
+     # - SONARQUBE_HOST=http://172.16.236.10:9000
+
+  # artifactory:
+  #   # OPTIONAL (Practice 2): uncomment to run an artifact repository locally.
+  #   # If you prefer, you can replace this with another repo manager (e.g., Nexus),
+  #   # but the practice documentation assumes Artifactory + Jenkins Artifactory plugin.
+  #   image: releases-docker.jfrog.io/jfrog/artifactory-oss:latest
+  #   ports:
+  #     - "8081:8081"
+  #   volumes:
+  #     - artifactory-data:/var/opt/jfrog/artifactory
+  #   networks:
+  #     devops_training_net:
+  #       ipv4_address: 172.16.236.4
+  #       aliases:
+  #         - artifactory
+  #   hostname: artifactory
+  #   restart: always
+
+  # sonarqube:
+  #   image: sonarqube:9.9.0-community
+  #   depends_on:
+  #     - sonardb
+  #   environment:
+  #     SONAR_JDBC_URL: jdbc:postgresql://sonardb:5432/sonar
+  #     SONAR_JDBC_USERNAME: sonar
+  #     SONAR_JDBC_PASSWORD: sonar
+  #   volumes:
+  #     - sonarqube-vol:/opt/sonarqube
+  #   ports:
+  #     - "9009:9000"
+  #   hostname: sonarqube
+  #   networks:
+  #     devops_training_net:
+  #       ipv4_address: 172.16.236.10
+  #       aliases: 
+  #         - sonarqube
+
+  # sonardb:
+  #   image: postgres:12
+  #   environment:
+  #     POSTGRES_USER: sonar
+  #     POSTGRES_PASSWORD: sonar
+  #   volumes:
+  #     - postgresql-vol:/var/lib/postgresql
+  #   hostname: sonardb
+  #   networks:
+  #     devops_training_net:
+  #       aliases: 
+  #         - sonardb
+
+  

@@ -1,0 +1,4 @@
+cloudbees-folder
+git
+blueocean
+docker-workflow
