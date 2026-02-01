@@ -2,6 +2,10 @@
 
 En esta práctica aprenderás a montar pipelines CI/CD en **Azure DevOps** integrándolo directamente con **GitHub**. Repetiremos los conceptos de las prácticas anteriores (pipeline por etapas, variables, parámetros, condiciones por rama, templates reutilizables y agentes self-hosted), pero en el ecosistema de Azure DevOps.
 
+IMPORTANTE:
+- La ejecución de esta práctica es **opcional**: no es obligatorio crear una cuenta de Azure DevOps ni ejecutar los pipelines.
+- Para entregar la práctica, es suficiente con presentar la **solución teórica** (los ficheros YAML con la estructura final y comentarios).
+
 ## Azure DevOps como plataforma SDLC 360 (visión general)
 Azure DevOps es una plataforma “360” para el ciclo de vida de desarrollo (SDLC), porque integra en un mismo sitio:
 - **Azure Boards**: planificación (backlog, issues, sprints, kanban).
