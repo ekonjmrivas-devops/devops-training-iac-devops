@@ -23,4 +23,4 @@ Habrá cinco casos prácticos, cada uno con una única rama de solución `traini
 - training-2-piplines-ci-cd-jenkins  - enunciado: [training-2-piplines-ci-cd-jenkins.md](training-2-piplines-ci-cd-jenkins.md)
 - training-3-github-actions  - enunciado: [training-3-github-actions.md](training-3-github-actions.md)
 - training-4-gitlab-ci-cd  - enunciado: [training-4-gitlab-ci-cd.md](training-4-gitlab-ci-cd.md)
-- training-5-azure-devops-pipelines
+- training-5-azure-devops-pipelines  - enunciado: [training-5-azure-devops-pipelines.md](training-5-azure-devops-pipelines.md)

@@ -157,6 +157,109 @@ Recomendación:
 Referencia:
 - https://docs.gitlab.com/ee/ci/variables/
 
+## GitLab Runners (igual que el runner self-hosted de GitHub Actions)
+Un **GitLab Runner** es el componente que ejecuta los jobs de CI/CD. Sin runner, GitLab no puede correr tu pipeline.
+
+Tipos comunes:
+- **Shared runners** (GitLab.com): disponibles si GitLab los ofrece para tu plan/proyecto.
+- **Specific runners** (self-hosted): los instalas tú en tu máquina/VM/red (ideal para conectividad on-prem).
+
+Ventajas de usar runners self-hosted en el curso/empresa
+- **Personalización**: instalas herramientas específicas (docker compose, CLIs, SDKs).
+- **Conectividad on-prem**: acceso a servicios internos (registry, Artifactory, SonarQube, BBDD, etc.).
+- **Seguridad**: control de egress/ingress y posibilidad de aislar runners por proyecto.
+- **Rendimiento/caché**: caches persistentes (Maven/pip/Docker layers) para builds más rápidos.
+- **Cumplimiento**: integración con redes segregadas, proxies, políticas internas.
+
+Notas de seguridad:
+- Si usas Docker executor y montas `/var/run/docker.sock`, el job tiene mucho poder sobre el host Docker.
+- En entornos reales: usar máquinas dedicadas, aislar runners, rotar tokens y aplicar hardening.
+
+## Ejercicio final (opcional) - Desplegar un GitLab Runner en local con Docker Compose
+Objetivo: ejecutar pipelines desde tu máquina/red para tener conectividad con herramientas on-prem (registry/Artifactory).
+
+### Paso 1 - Crear/obtener el token de registro del runner
+En GitLab (UI):
+- Settings -> CI/CD -> Runners
+- En “Set up a specific Runner manually” copia:
+  - URL de GitLab (por ejemplo `https://gitlab.com/` o tu GitLab on-prem)
+  - Token de registro (registration token)
+
+### Paso 2 - Registrar el runner (Docker)
+Ejecuta una vez (en tu máquina):
+```bash
+docker run --rm -it \
+  -v gitlab-runner-config:/etc/gitlab-runner \
+  gitlab/gitlab-runner:alpine \
+  register
+```
+
+Durante el asistente:
+- URL: la de tu GitLab
+- Token: el registration token del proyecto/grupo
+- Executor: `docker`
+- Default image: `alpine:3.19` (o la que uses en CI)
+
+### Paso 3 - Ejecutar el runner como servicio (Docker Compose)
+Crea un fichero `docker-compose.gitlab-runner.yml` (por ejemplo en el repo IaC o en tu entorno local):
+```yaml
+version: "3.8"
+
+services:
+  gitlab-runner:
+    image: gitlab/gitlab-runner:alpine
+    restart: unless-stopped
+    volumes:
+      - gitlab-runner-config:/etc/gitlab-runner
+      # Permite ejecutar docker/docker compose desde los jobs (Docker executor + docker.sock)
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - devops_training_net
+
+volumes:
+  gitlab-runner-config:
+
+networks:
+  # Reutiliza la red donde viven registry/artifactory en tu stack IaC (ajusta el nombre si cambia)
+  devops_training_net:
+    external: true
+```
+
+Arranque:
+```bash
+docker compose -f docker-compose.gitlab-runner.yml up -d
+docker compose -f docker-compose.gitlab-runner.yml logs -f
+```
+
+### Paso 4 - Usar el runner en `.gitlab-ci.yml` (tags)
+Cuando registras el runner puedes asignar **tags** (por ejemplo `local`, `docker`, `onprem`).
+
+En tu job:
+```yaml
+ci:build-image:
+  stage: ci
+  tags: [local, docker]
+  image: docker:27
+  services:
+    - docker:27-dind
+  script:
+    - echo "TODO: docker build ..."
+```
+
+Así fuerzas a que el job se ejecute en tu runner local (con conectividad a `local-registry` y `artifactory`).
+
+### Paso 5 - Conectividad con registry/Artifactory
+Si levantas registry/Artifactory en el stack IaC y el runner está en la misma red Docker (`devops_training_net`), tus jobs podrán acceder a:
+- `local-registry:5000`
+- `artifactory:8081`
+
+Si usas GitLab.com con runners compartidos, NO tendrás acceso a esos hosts internos.
+
+Referencias:
+- GitLab Runner: https://docs.gitlab.com/runner/
+- Install/Run with Docker: https://docs.gitlab.com/runner/install/docker.html
+- Executors (docker): https://docs.gitlab.com/runner/executors/docker.html
+
 ## Entregables (opcional ejecutar)
 - `.gitlab-ci.yml` en ambos repos (Python/Java) con:
   - stages CI y CD
@@ -164,4 +267,3 @@ Referencia:
   - cleanup con `after_script`
 - Alternativamente (si no ejecutas):
   - `.gitlab/010-gitlab-ci-dummy.yml` y `.gitlab/020-gitlab-ci-solution.yml` + `.gitlab-ci.yml` con la estructura final comentada
-
