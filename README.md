@@ -1,4 +1,4 @@
-# DevOps Training 2025 - IaC y estrategia DevOps
+# DevOps Training - IaC y estrategia DevOps
 
 Repositorio base de infraestructura como código (IaC) y estrategia DevOps usada en el curso.
 
