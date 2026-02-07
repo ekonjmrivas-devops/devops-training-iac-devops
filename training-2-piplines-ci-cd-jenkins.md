@@ -6,9 +6,9 @@ En esta práctica aprenderás a construir un pipeline CI/CD en Jenkins de forma 
 En esta práctica hemos ajustado la lista de plugins. Si ya tenías Jenkins levantado con un volumen persistente, **debes reinstalar Jenkins o borrar el volumen** para que el conjunto de plugins se aplique limpio. Si no, pueden quedarse plugins antiguos y aparecer errores de dependencias.
 
 ## Repos relacionados y ramas
-- Repo Python (base `feat/base`): https://github.com/contreras-adr/devops-training-2025-python-app/tree/feat/base
-- Repo Java (base `feat/base`): https://github.com/contreras-adr/devops-training-2025-java-app/tree/feat/base
-- Repo IaC/DevOps (base `feat/base`): https://github.com/contreras-adr/devops-training-2025-iac-devops/tree/feat/base
+- Repo Python (base `feat/base`): https://github.com/contreras-adr/devops-training-python-app/tree/feat/base
+- Repo Java (base `feat/base`): https://github.com/contreras-adr/devops-training-java-app/tree/feat/base
+- Repo IaC/DevOps (base `feat/base`): https://github.com/contreras-adr/devops-training-iac-devops/tree/feat/base
 
 ## Referencias (para consultar cuando te atasques)
 - Pipeline Jenkins (conceptos): https://www.jenkins.io/doc/book/pipeline/
@@ -64,16 +64,16 @@ Regla principal del curso:
   3) Verificas el resultado (logs + salida)
   4) Pasas al siguiente paso
 
-## Punto de partida: Jenkinsfile dummy (010)
+## Punto de partida: Jenkinsfile dummy
 En cada repo tienes un fichero de referencia:
-- `devops/010-jenkinsfile-dummy` (plantilla inicial)
-- `devops/020-jenkinsfile-solution` (ejemplo de referencia)
+- `devops/Jenkinsfile-dummy` (plantilla inicial)
+- `devops/Jenkinsfile-template` (ejemplo de referencia)
 
 Tu fichero “real” para Jenkins siempre es:
-- `devops/jenkinsfile`
+- `devops/Jenkinsfile`
 
 Ejercicio 0 (setup):
-- Copia el contenido de `devops/010-jenkinsfile-dummy` a `devops/jenkinsfile`.
+- Copia el contenido de `devops/Jenkinsfile-dummy` a `devops/Jenkinsfile`.
 - Confirma que Jenkins ejecuta el pipeline y que al menos hace un stage sencillo.
 
 ### Ejercicio 0.1 - Crear ramas (Gitflow simulado)
@@ -302,7 +302,7 @@ post {
 Objetivo: hacer “publish” del artefacto imagen.
 
 Prerrequisito:
-- Levanta el servicio `registry` (comentado) en `devops-training-2025-iac-devops/docker-compose.yml` y recuerda descomentar lo necesario.
+- Levanta el servicio `registry` (comentado) en `devops-training-iac-devops/docker-compose.yml` y recuerda descomentar lo necesario.
 
 Tarea:
 - Añade un parámetro booleano `ENABLE_REGISTRY_PUSH`.
@@ -315,12 +315,12 @@ Tarea:
 Objetivo: publicar el artefacto Java en un repositorio de artefactos usando un comando sencillo (sin depender del plugin de Artifactory en Jenkins).
 
 Prerrequisitos:
-- Levanta el servicio `artifactory` (comentado) en `devops-training-2025-iac-devops/docker-compose.yml` (hay que descomentarlo).
+- Levanta el servicio `artifactory` (comentado) en `devops-training-iac-devops/docker-compose.yml` (hay que descomentarlo).
 - Crea credenciales en Jenkins con ID `artifactory-creds` (usuario/password o token).
 
 Tarea (en el Jenkinsfile de Java, después de `make test`):
 - Usa `withCredentials` y `curl` para subir el jar `target/*.jar` a una ruta del estilo:
-  - `http://artifactory:8081/artifactory/libs-release-local/devops-training-2025-java-app/<build>/...`
+  - `http://artifactory:8081/artifactory/libs-release-local/devops-training-java-app/<build>/...`
 
 Pista (plantilla):
 ```groovy
@@ -332,7 +332,7 @@ withCredentials([usernamePassword(
   sh '''
     ART_URL="http://artifactory:8081/artifactory"
     ART_REPO="libs-release-local"
-    ART_PATH="devops-training-2025-java-app/${BUILD_NUMBER}"
+    ART_PATH="devops-training-java-app/${BUILD_NUMBER}"
     JAR_FILE=$(ls target/*.jar | head -n 1)
 
     curl -u "${ART_USER}:${ART_PASS}" -T "${JAR_FILE}" \

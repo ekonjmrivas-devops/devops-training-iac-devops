@@ -1,0 +1,41 @@
+parameters:
+  imageName: ''
+  dockerfile: 'devops/Dockerfile'
+  versionJar: '1.0.4-SNAPSHOT'
+
+steps:
+  - script: |
+      docker run --rm -v "$(System.DefaultWorkingDirectory)":/app -w /app \
+        maven:3.8.6-openjdk-11-slim sh -c "make lint"
+    displayName: "Lint (Docker)"
+
+  - script: |
+      docker run --rm -v "$(System.DefaultWorkingDirectory)":/app -w /app \
+        maven:3.8.6-openjdk-11-slim sh -c "make test"
+    displayName: "Tests unitarios (Docker)"
+
+  - script: |
+      docker build -t "${{ parameters.imageName }}" --build-arg VERSION=${{ parameters.versionJar }} \
+        -f "${{ parameters.dockerfile }}" .
+    displayName: "Build image"
+
+  - script: |
+      if [ -n "$(ARTIFACTORY_URL)" ] && [ -n "$(ARTIFACTORY_REPO)" ]; then
+        docker run --rm -v "$(System.DefaultWorkingDirectory)":/app -w /app \
+          maven:3.8.6-openjdk-11-slim sh -c "mvn -q -DskipTests package"
+
+        JAR_FILE=$(ls target/*.jar | head -n 1)
+        ART_PATH="devops-training-java-app/$(Build.BuildId)"
+
+        curl -u "$(ARTIFACTORY_USER):$(ARTIFACTORY_PASSWORD)" -T "${JAR_FILE}" \
+          "$(ARTIFACTORY_URL)/$(ARTIFACTORY_REPO)/${ART_PATH}/$(basename ${JAR_FILE})"
+      fi
+    displayName: "Upload jar (opcional)"
+
+  - script: |
+      if [ -n "$(REGISTRY_URL)" ]; then
+        docker tag "${{ parameters.imageName }}" "$(REGISTRY_URL)/${{ parameters.imageName }}"
+        echo "$(REGISTRY_PASSWORD)" | docker login "$(REGISTRY_URL)" -u "$(REGISTRY_USER)" --password-stdin
+        docker push "$(REGISTRY_URL)/${{ parameters.imageName }}"
+      fi
+    displayName: "Push image (opcional)"

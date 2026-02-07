@@ -9,9 +9,9 @@ Repositorio base de infraestructura como código (IaC) y estrategia DevOps usada
 - Este README se actualizará de forma incremental durante el curso.
 
 ## Repositorios del curso (ramas base)
-- App Python: https://github.com/contreras-adr/devops-training-2025-python-app/tree/feat/base
-- App Java: https://github.com/contreras-adr/devops-training-2025-java-app/tree/feat/base
-- IaC/DevOps: https://github.com/contreras-adr/devops-training-2025-iac-devops/tree/feat/base
+- App Python: https://github.com/contreras-adr/devops-training-python-app/tree/feat/base
+- App Java: https://github.com/contreras-adr/devops-training-java-app/tree/feat/base
+- IaC/DevOps: https://github.com/contreras-adr/devops-training-iac-devops/tree/feat/base
 
 ## Propósito del repositorio
 - Despliegue local de Jenkins y dependencias.

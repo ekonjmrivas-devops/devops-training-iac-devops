@@ -33,15 +33,15 @@ Reglas:
 
 ## Punto de partida: workflow dummy (010)
 En cada repo de proyecto (Python/Java) tienes ficheros de referencia:
-- `.github/workflows/010-workflow-dummy.yml` (plantilla inicial)
-- `.github/workflows/020-workflow-solution.yml` (estructura final / guía, sin “código copiable”)
+- `.github/workflows/workflow-dummy.yml` (plantilla inicial)
+- `.github/workflows/workflow-template.yml` (estructura final / guía, sin “código copiable”)
 
 Tu fichero “real” para que GitHub lo ejecute debe ser:
 - `.github/workflows/ci.yml`
 
 Ejercicio 0 (setup):
 1) Crea la carpeta `.github/workflows/` (si no existe).
-2) Copia `.github/workflows/010-workflow-dummy.yml` a `.github/workflows/ci.yml`.
+2) Copia `.github/workflows/workflow-dummy.yml` a `.github/workflows/ci.yml`.
 3) Haz commit y push. Comprueba en GitHub:
    - Actions -> workflow ejecutado
 

@@ -9,12 +9,12 @@ En esta práctica instalaremos y configuraremos Jenkins en local para poder ejec
 - Dejar Jenkins listo para ejecutar steps en contenedores (Docker) de forma aislada.
 
 ## Repos relacionados y ramas
-- Repo Python (base `feat/base`): https://github.com/contreras-adr/devops-training-2025-python-app/tree/feat/base
-- Repo Python (solucion `training-1-jenkins-config`): https://github.com/contreras-adr/devops-training-2025-python-app/tree/training-1-jenkins-config
-- Repo Java (base `feat/base`): https://github.com/contreras-adr/devops-training-2025-java-app/tree/feat/base
-- Repo Java (solucion `training-1-jenkins-config`): https://github.com/contreras-adr/devops-training-2025-java-app/tree/training-1-jenkins-config
-- Repo IaC/DevOps (base `feat/base`): https://github.com/contreras-adr/devops-training-2025-iac-devops/tree/feat/base
-- Repo IaC/DevOps (solucion `training-1-jenkins-config`): https://github.com/contreras-adr/devops-training-2025-iac-devops/tree/training-1-jenkins-config
+- Repo Python (base `feat/base`): https://github.com/contreras-adr/devops-training-python-app/tree/feat/base
+- Repo Python (solucion `training-1-jenkins-config`): https://github.com/contreras-adr/devops-training-python-app/tree/training-1-jenkins-config
+- Repo Java (base `feat/base`): https://github.com/contreras-adr/devops-training-java-app/tree/feat/base
+- Repo Java (solucion `training-1-jenkins-config`): https://github.com/contreras-adr/devops-training-java-app/tree/training-1-jenkins-config
+- Repo IaC/DevOps (base `feat/base`): https://github.com/contreras-adr/devops-training-iac-devops/tree/feat/base
+- Repo IaC/DevOps (solucion `training-1-jenkins-config`): https://github.com/contreras-adr/devops-training-iac-devops/tree/training-1-jenkins-config
 
 ## Prerequisitos
 - Docker y Docker Compose instalados.
@@ -26,7 +26,7 @@ En esta práctica instalaremos y configuraremos Jenkins en local para poder ejec
 En este curso Jenkins se despliega con Docker Compose junto a un daemon Docker-in-Docker (DinD). Esto permite crear “entornos virtualizados” (contenedores) para ejecutar steps de los pipelines sin depender del Docker del host.
 
 Consulta el fichero:
-- `devops-training-2025-iac-devops/docker-compose.yml`
+- `devops-training-iac-devops/docker-compose.yml`
 
 Resumen de lo que despliega:
 - Red `devops_training_net` (bridge) con subnet `172.16.236.0/24`
@@ -37,7 +37,7 @@ Resumen de lo que despliega:
 
 ## Configurar plugins de Jenkins
 Antes de levantar Jenkins, define plugins en:
-- `devops-training-2025-iac-devops/jenkins/plugins.txt`
+- `devops-training-iac-devops/jenkins/plugins.txt`
 
 Nota:
 - Si cambias esta lista y ya tienes Jenkins con volumen persistente, deberás borrar el volumen para aplicar bien el cambio.
