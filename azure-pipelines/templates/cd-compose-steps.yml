@@ -1,0 +1,29 @@
+# Template (Azure Pipelines) - CD con Docker Compose (steps)
+#
+# Template reutilizable para simular CD: up -> e2e -> down (siempre).
+
+parameters:
+  composeUp: "docker compose up -d"
+  testCommand: "echo TODO: curl al endpoint"
+  composeDown: "docker compose down --volumes"
+
+steps:
+  - script: |
+      echo "TODO: deploy (simulado)"
+      echo "CMD: ${{ parameters.composeUp }}"
+      ${{ parameters.composeUp }}
+    displayName: "Compose up (TODO)"
+
+  - script: |
+      echo "TODO: e2e"
+      echo "CMD: ${{ parameters.testCommand }}"
+      ${{ parameters.testCommand }}
+    displayName: "E2E (TODO)"
+
+  - script: |
+      echo "Cleanup (siempre)"
+      echo "CMD: ${{ parameters.composeDown }}"
+      ${{ parameters.composeDown }} || true
+    displayName: "Cleanup"
+    condition: always()
+

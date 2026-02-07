@@ -1,4 +1,4 @@
-# DevOps Training 2025 - IaC y estrategia DevOps
+# DevOps Training - IaC y estrategia DevOps
 
 Repositorio base de infraestructura como código (IaC) y estrategia DevOps usada en el curso.
 
@@ -19,8 +19,8 @@ Repositorio base de infraestructura como código (IaC) y estrategia DevOps usada
 
 ## Casos prácticos (5)
 Habrá cinco casos prácticos, cada uno con una única rama de solución `training-x-title`.
-- training-1-jenkins-config (ONGOING) - enunciado: [training-1-jenkins-config.md](training-1-jenkins-config.md)
-- training-2-piplines-ci-cd-jenkins (PENDING) - enunciado: [training-2-piplines-ci-cd-jenkins.md](training-2-piplines-ci-cd-jenkins.md)
-- training-3-github-actions (PENDING)
-- training-4-gitlab-ci-cd (PENDING)
-- training-5-azure-devops-pipelines (PENDING)
+- training-1-jenkins-config - enunciado: [training-1-jenkins-config.md](training-1-jenkins-config.md)
+- training-2-piplines-ci-cd-jenkins  - enunciado: [training-2-piplines-ci-cd-jenkins.md](training-2-piplines-ci-cd-jenkins.md)
+- training-3-github-actions  - enunciado: [training-3-github-actions.md](training-3-github-actions.md)
+- training-4-gitlab-ci-cd  - enunciado: [training-4-gitlab-ci-cd.md](training-4-gitlab-ci-cd.md)
+- training-5-azure-devops-pipelines  - enunciado: [training-5-azure-devops-pipelines.md](training-5-azure-devops-pipelines.md)
