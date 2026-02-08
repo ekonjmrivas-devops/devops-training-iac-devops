@@ -75,14 +75,14 @@ Reglas:
 
 ## Punto de partida: pipeline dummy (010)
 En cada repo de proyecto (Python/Java) crea dos ficheros de referencia:
-- `azure-pipelines/010-pipeline-dummy.yml` (plantilla inicial)
-- `azure-pipelines/020-pipeline-solution.yml` (estructura final / guía, sin “código copiable”)
+- `azure-pipelines/pipeline-dummy.yml` (plantilla inicial)
+- `azure-pipelines/pipeline-template.yml` (estructura final / guía, sin “código copiable”)
 
 Tu fichero “real” para que Azure DevOps ejecute el pipeline puede ser cualquiera, pero para el curso recomendamos:
 - `azure-pipelines.yml` (en la raíz del repo)
 
 Ejercicio 0 (setup):
-1) Copia `azure-pipelines/010-pipeline-dummy.yml` a `azure-pipelines.yml`
+1) Copia `azure-pipelines/pipeline-dummy.yml` a `azure-pipelines.yml`
 2) Haz commit y push.
 
 ## Integración Azure DevOps -> GitHub (cómo conectarlo)

@@ -1,0 +1,99 @@
+@Library('iac-devops-lib') _
+
+/*
+  Template - Ejercicio opcional (Práctica 2)
+  Objetivo:
+  - Usar librería compartida en lugar de funciones locales.
+  - Leer la versión de imagen desde fichero VERSION.
+  - Reescribir imagen de docker-compose para CD.
+*/
+
+pipeline {
+  agent any
+
+  options {
+    timestamps()
+    disableConcurrentBuilds()
+  }
+
+  parameters {
+    booleanParam(name: 'RUN_CD', defaultValue: false, description: 'Ejecutar CD (solo develop/master)')
+  }
+
+  environment {
+    IMAGE_REPO = 'TODO/mi-app'
+    APP_URL = 'http://localhost:5001/'
+    COMPOSE_FILE = 'docker-compose.yml'
+    COMPOSE_SERVICE = 'app'
+    TEST_IMAGE = 'python:3.6-slim' // Para Java: maven:3.8.6-openjdk-11-slim
+  }
+
+  stages {
+    stage('Init - Versionado') {
+      steps {
+        script {
+          env.IMAGE_VERSION = devopsLib.readVersion('VERSION')
+          env.IMAGE_NAME = "${env.IMAGE_REPO}:${env.IMAGE_VERSION}"
+          echo "Imagen objetivo: ${env.IMAGE_NAME}"
+        }
+      }
+    }
+
+    stage('CI - Test') {
+      steps {
+        script {
+          devopsLib.runInDocker(env.TEST_IMAGE) {
+            sh 'echo "TODO: ejecutar lint/test del proyecto"'
+          }
+        }
+      }
+    }
+
+    stage('CI - Build image') {
+      steps {
+        script {
+          sh 'echo "TODO: docker build usando env.IMAGE_NAME"'
+          // Ejemplo Python:
+          // docker.build(env.IMAGE_NAME, '-f devops/Dockerfile .')
+          // Ejemplo Java:
+          // docker.build(env.IMAGE_NAME, "--build-arg VERSION=${env.IMAGE_VERSION}-SNAPSHOT -f devops/Dockerfile .")
+        }
+      }
+    }
+
+    stage('CD') {
+      when {
+        allOf {
+          anyOf {
+            branch 'develop'
+            branch 'master'
+          }
+          expression { return params.RUN_CD }
+        }
+      }
+      steps {
+        script {
+          env.DEPLOY_ENV = (env.BRANCH_NAME == 'master') ? 'PRO' : 'DEV'
+          env.COMPOSE_PROJECT = env.DEPLOY_ENV.toLowerCase()
+
+          devopsLib.setComposeServiceImage(
+            composeFile: env.COMPOSE_FILE,
+            serviceName: env.COMPOSE_SERVICE,
+            image: env.IMAGE_NAME
+          )
+
+          devopsLib.composeUpTestDown(
+            up: "docker compose -p ${env.COMPOSE_PROJECT} up -d",
+            test: "sleep 5 && curl -fsS ${env.APP_URL}",
+            down: "docker compose -p ${env.COMPOSE_PROJECT} down --volumes"
+          )
+        }
+      }
+      post {
+        always {
+          sh "docker rmi ${env.IMAGE_NAME} || true"
+        }
+      }
+    }
+  }
+}

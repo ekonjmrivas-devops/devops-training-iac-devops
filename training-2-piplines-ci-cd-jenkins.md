@@ -6,9 +6,9 @@ En esta práctica aprenderás a construir un pipeline CI/CD en Jenkins de forma 
 En esta práctica hemos ajustado la lista de plugins. Si ya tenías Jenkins levantado con un volumen persistente, **debes reinstalar Jenkins o borrar el volumen** para que el conjunto de plugins se aplique limpio. Si no, pueden quedarse plugins antiguos y aparecer errores de dependencias.
 
 ## Repos relacionados y ramas
-- Repo Python (base `feat/base`): https://github.com/contreras-adr/devops-training-2025-python-app/tree/feat/base
-- Repo Java (base `feat/base`): https://github.com/contreras-adr/devops-training-2025-java-app/tree/feat/base
-- Repo IaC/DevOps (base `feat/base`): https://github.com/contreras-adr/devops-training-2025-iac-devops/tree/feat/base
+- Repo Python (base `feat/base`): https://github.com/contreras-adr/devops-training-python-app/tree/feat/base
+- Repo Java (base `feat/base`): https://github.com/contreras-adr/devops-training-java-app/tree/feat/base
+- Repo IaC/DevOps (base `feat/base`): https://github.com/contreras-adr/devops-training-iac-devops/tree/feat/base
 
 ## Referencias (para consultar cuando te atasques)
 - Pipeline Jenkins (conceptos): https://www.jenkins.io/doc/book/pipeline/
@@ -23,6 +23,46 @@ En esta práctica hemos ajustado la lista de plugins. Si ya tenías Jenkins leva
 - Cada pipeline apunta al fichero `devops/jenkinsfile` (al principio es “dummy”).
 - Jenkins puede ejecutar Docker (Docker daemon accesible desde Jenkins; en este curso normalmente via DinD).
 
+## Credenciales Jenkins (importante)
+Antes de ejecutar los stages opcionales de publicación, crea estas credenciales en Jenkins:
+
+Ruta:
+- `Manage Jenkins -> Credentials -> System -> Global credentials (unrestricted) -> Add Credentials`
+
+Credenciales esperadas por ID:
+- `local-registry-creds`
+  - Tipo: `Username with password`
+  - Uso: login y push al Docker Registry local (`local-registry:5000`) en el ejercicio 7 opcional.
+  - Valores (laboratorio):
+    - `ID`: `local-registry-creds`
+    - `Username`: `registry-user`
+    - `Password`: `registry-pass`
+    - `Description`: `Local Docker Registry credentials`
+- `artifactory-creds` (solo Java opcional)
+  - Tipo: `Username with password` (o token según tu configuración)
+  - Uso: subida del `.jar` a Artifactory en el ejercicio 9 opcional.
+  - Valores (laboratorio):
+    - `ID`: `artifactory-creds`
+    - `Username`: `admin`
+    - `Password`: `password` (o la contraseña actual de `admin` si ya fue cambiada)
+    - `Description`: `Local Artifactory credentials`
+  - Recomendación:
+    - Crear un usuario técnico dedicado en Artifactory (por ejemplo `ci-user`) y usar ese usuario en lugar de `admin`.
+
+Nota:
+- El `ID` debe coincidir exactamente con el usado en el Jenkinsfile.
+- Si no existe la credencial, Jenkins fallará con errores del tipo:
+  - `Could not find credentials entry with ID 'local-registry-creds'`
+- El `local-registry` del laboratorio (servicio `registry:2` en `docker-compose.yml`) está configurado **sin autenticación** por defecto.
+- Aunque el registry sea abierto, si tu Jenkinsfile usa `withCredentials(credentialsId: 'local-registry-creds', ...)`, Jenkins exige que esa credencial exista.
+- Para no bloquear el pipeline en laboratorio:
+  - Crea `local-registry-creds` con valores dummy (`registry-user` / `registry-pass`), o
+  - Adapta el Jenkinsfile para omitir `docker login` cuando no haya auth en el registry.
+
+Captura de referencia (crear credenciales en Jenkins):
+
+![Jenkins - Credentials](jenkins-credentials.png)
+
 ## Estrategia Gitflow simulada (entornos DEV y PRO)
 En esta práctica vamos a simular que existen **2 entornos**:
 - **DEV**: se despliega desde la rama `develop`
@@ -33,7 +73,9 @@ Y trabajaremos el desarrollo en una rama feature:
 
 Regla principal del curso:
 - **CI** se ejecuta en cualquier rama (feature/develop/master).
-- **CD** solo se ejecuta si la rama es `develop` o `master`.
+- **CD** se ejecuta si:
+  - `RUN_CD=true` (en cualquier rama), **o**
+  - la rama es `develop` o `master` (aunque `RUN_CD=false`).
 
 ## Qué vas a construir (resultado final)
 
@@ -64,16 +106,16 @@ Regla principal del curso:
   3) Verificas el resultado (logs + salida)
   4) Pasas al siguiente paso
 
-## Punto de partida: Jenkinsfile dummy (010)
+## Punto de partida: Jenkinsfile dummy
 En cada repo tienes un fichero de referencia:
-- `devops/010-jenkinsfile-dummy` (plantilla inicial)
-- `devops/020-jenkinsfile-solution` (ejemplo de referencia)
+- `devops/Jenkinsfile-dummy` (plantilla inicial)
+- `devops/Jenkinsfile-template` (ejemplo de referencia)
 
 Tu fichero “real” para Jenkins siempre es:
-- `devops/jenkinsfile`
+- `devops/Jenkinsfile`
 
 Ejercicio 0 (setup):
-- Copia el contenido de `devops/010-jenkinsfile-dummy` a `devops/jenkinsfile`.
+- Copia el contenido de `devops/Jenkinsfile-dummy` a `devops/Jenkinsfile`.
 - Confirma que Jenkins ejecuta el pipeline y que al menos hace un stage sencillo.
 
 ### Ejercicio 0.1 - Crear ramas (Gitflow simulado)
@@ -178,23 +220,26 @@ Endpoints:
 - Python: `http://localhost:5001/`
 - Java: `http://localhost:8084/hello`
 
-### Ejercicio 6.1 - Ejecutar CD solo en `develop` o `master` (estrategia por entorno)
-Objetivo: aprender a ejecutar stages solo en ciertas ramas (simulando entornos).
+### Ejercicio 6.1 - Ejecutar CD por rama o parámetro
+Objetivo: aprender a combinar condiciones de rama y parámetros.
 
 Tarea:
-- Modifica el stage `CD` para que **solo se ejecute** cuando la rama sea `develop` o `master`.
+- Modifica el stage `CD` para que se ejecute si:
+  - `RUN_CD=true`, o
+  - la rama es `develop` o `master`.
 
 Pista (Declarative Pipeline):
 ```groovy
 stage('CD') {
   when {
     anyOf {
+      expression { return params.RUN_CD }
       branch 'develop'
       branch 'master'
     }
   }
   steps {
-    echo "CD enabled for branch: ${env.BRANCH_NAME}"
+    echo "CD habilitado: RUN_CD=${params.RUN_CD}, branch=${env.BRANCH_NAME}"
   }
 }
 ```
@@ -226,25 +271,26 @@ Objetivo: aprender a definir parámetros en Jenkins y usarlos para controlar la 
 
 Tarea:
 - Añade un parámetro booleano llamado `RUN_CD` (por defecto `false`).
-- Modifica el stage `CD` para que solo se ejecute si:
-  - la rama es `develop` o `master`, **y**
-  - `RUN_CD` es `true`
+- Modifica el stage `CD` para que:
+  - si `RUN_CD=true`, ejecute en cualquier rama;
+  - si `RUN_CD=false`, solo ejecute en `develop`/`master`.
 
 Pista:
 ```groovy
 parameters {
-  booleanParam(name: 'RUN_CD', defaultValue: false, description: 'Ejecutar CD (solo develop/master)')
+  booleanParam(name: 'RUN_CD', defaultValue: false, description: 'Ejecutar CD')
 }
 
 stage('CD') {
   when {
-    allOf {
-      anyOf { branch 'develop'; branch 'master' }
+    anyOf {
       expression { return params.RUN_CD }
+      branch 'develop'
+      branch 'master'
     }
   }
   steps {
-    echo "CD habilitado por parámetro RUN_CD=${params.RUN_CD}"
+    echo "CD habilitado: RUN_CD=${params.RUN_CD}, branch=${env.BRANCH_NAME}"
   }
 }
 ```
@@ -302,7 +348,7 @@ post {
 Objetivo: hacer “publish” del artefacto imagen.
 
 Prerrequisito:
-- Levanta el servicio `registry` (comentado) en `devops-training-2025-iac-devops/docker-compose.yml` y recuerda descomentar lo necesario.
+- Asegúrate de tener levantado el servicio `registry` en `devops-training-iac-devops/docker-compose.yml`.
 
 Tarea:
 - Añade un parámetro booleano `ENABLE_REGISTRY_PUSH`.
@@ -311,16 +357,30 @@ Tarea:
   - Autentica con credenciales de Jenkins (`local-registry-creds`)
   - Haz `push()`
 
-### Ejercicio 8 (opcional, Java) - Subir el artefacto (.jar) a Artifactory (sin plugin)
+Validación (Docker Registry local):
+- Comprueba repositorios publicados:
+```bash
+curl -s http://localhost:5000/v2/_catalog
+```
+- Comprueba tags de una imagen concreta:
+```bash
+curl -s http://localhost:5000/v2/<nombre-imagen>/tags/list
+```
+- Validación final de consumo:
+```bash
+docker pull localhost:5000/<nombre-imagen>:<build>
+```
+
+### Ejercicio 9 (opcional, Java) - Subir el artefacto (.jar) a Artifactory (sin plugin)
 Objetivo: publicar el artefacto Java en un repositorio de artefactos usando un comando sencillo (sin depender del plugin de Artifactory en Jenkins).
 
 Prerrequisitos:
-- Levanta el servicio `artifactory` (comentado) en `devops-training-2025-iac-devops/docker-compose.yml` (hay que descomentarlo).
+- Asegúrate de tener levantado el servicio `artifactory` en `devops-training-iac-devops/docker-compose.yml`.
 - Crea credenciales en Jenkins con ID `artifactory-creds` (usuario/password o token).
 
 Tarea (en el Jenkinsfile de Java, después de `make test`):
 - Usa `withCredentials` y `curl` para subir el jar `target/*.jar` a una ruta del estilo:
-  - `http://artifactory:8081/artifactory/libs-release-local/devops-training-2025-java-app/<build>/...`
+  - `http://artifactory:8081/artifactory/libs-release-local/devops-training-java-app/<build>/...`
 
 Pista (plantilla):
 ```groovy
@@ -332,7 +392,7 @@ withCredentials([usernamePassword(
   sh '''
     ART_URL="http://artifactory:8081/artifactory"
     ART_REPO="libs-release-local"
-    ART_PATH="devops-training-2025-java-app/${BUILD_NUMBER}"
+    ART_PATH="devops-training-java-app/${BUILD_NUMBER}"
     JAR_FILE=$(ls target/*.jar | head -n 1)
 
     curl -u "${ART_USER}:${ART_PASS}" -T "${JAR_FILE}" \
@@ -341,7 +401,23 @@ withCredentials([usernamePassword(
 }
 ```
 
-### Ejercicio 9 (opcional) - Refactor final: “mini libreria” para Compose
+Validación (Artifactory):
+- Si en este ejercicio subes `.jar` (caso base), verifica el path del artefacto:
+```bash
+curl -u "<usuario>:<password>" \
+  "http://localhost:8081/artifactory/api/storage/libs-release-local/devops-training-java-app/<build>"
+```
+
+- Si además usas Artifactory como Docker Registry para imágenes, verifica catálogo y tags:
+```bash
+curl -u "<usuario>:<password>" \
+  "http://localhost:8081/artifactory/api/docker/<docker-repo>/v2/_catalog"
+
+curl -u "<usuario>:<password>" \
+  "http://localhost:8081/artifactory/api/docker/<docker-repo>/v2/<nombre-imagen>/tags/list"
+```
+
+### Ejercicio 10 (opcional) - Refactor final: “mini libreria” para Compose
 Objetivo: empaquetar el flujo CD para no repetirlo.
 
 Tarea:
@@ -349,7 +425,7 @@ Tarea:
   - `up`, `test`, `down`
 - Cambia el stage CD para usar esa función.
 
-### Ejercicio 10 (opcional, Java) - Usar `cd.Dockerfile` en la fase CD
+### Ejercicio 11 (opcional, Java) - Usar `cd.Dockerfile` en la fase CD
 Objetivo: construir una imagen “runtime” en CD usando `devops/cd.Dockerfile`.
 
 Tarea:
@@ -358,6 +434,58 @@ Tarea:
 
 Nota:
 - `cd.Dockerfile` copia el jar desde `./target/` y crea una imagen final con `openjdk:11-jre-slim`.
+
+### Ejercicio 12 (opcional) - Refactor con librería Groovy compartida
+Objetivo: sustituir funciones locales del Jenkinsfile por funciones reutilizables desde una librería compartida en el repo IaC.
+
+Contexto:
+- Librería del curso: `devops-training-iac-devops/groovy/vars/devopsLib.groovy`
+- Funciones disponibles:
+  - `runInDocker(String image, Closure body)`
+  - `composeUpTestDown(Map args)`
+  - `setComposeServiceImage(Map args)`
+  - `readVersion(String versionFile = "VERSION")`
+
+Paso a paso: registrar la librería en Jenkins
+1) Ir a:
+   - `Manage Jenkins -> System -> Global Trusted Pipeline Libraries`
+2) En “Global Trusted Pipeline Libraries”, pulsa “Add”.
+3) Configura:
+   - `Name`: `iac-devops-lib`
+   - `Default version`: `feat/base` (o la rama donde tengas la librería)
+   - Marca “Allow default version to be overridden” (opcional recomendado)
+4) En “Retrieval method”, selecciona:
+   - `Modern SCM` -> `Git`
+   - URL del repo IaC:
+     - `https://github.com/contreras-adr/devops-training-iac-devops.git`
+   - Credenciales (si el repo no es público)
+5) Define `Library Path`:
+   - `groovy` si la librería está en `groovy/vars/devopsLib.groovy`
+6) Guarda y vuelve al pipeline.
+
+Captura de referencia (configuración de Global Trusted Pipeline Libraries):
+
+![Jenkins - Global Shared Libraries](jenkins-configure-global-libs.png)
+
+Referencias útiles (Shared Libraries):
+- Jenkins Shared Libraries (guía principal): https://www.jenkins.io/doc/book/pipeline/shared-libraries/
+- Global Shared Libraries (configuración en Jenkins): https://www.jenkins.io/doc/book/pipeline/shared-libraries/#global-shared-libraries
+- Carga dinámica con `library` step: https://www.jenkins.io/doc/book/pipeline/shared-libraries/#loading-libraries-dynamically
+
+Tarea de refactor en cada repo (Python y Java):
+- Elimina funciones locales (`runInDocker`, `composeUpTestDown`) del Jenkinsfile.
+- Importa la librería al inicio:
+```groovy
+@Library('iac-devops-lib') _
+```
+- Sustituye llamadas:
+  - `runInDocker(...)` -> `devopsLib.runInDocker(...)`
+  - `composeUpTestDown(...)` -> `devopsLib.composeUpTestDown(...)`
+- Usa `devopsLib.readVersion('VERSION')` para leer la versión de imagen desde el fichero `VERSION` en la raíz del repo.
+- Antes de CD, usa `devopsLib.setComposeServiceImage(...)` para actualizar en `docker-compose.yml` la imagen del servicio de app.
+
+Referencia de plantilla:
+- `devops-training-iac-devops/jenkins/Jenkinsfile-template-ejercicio-optional`
 
 ## Entregables
 - `devops/jenkinsfile` actualizado (nueva versión) en ambos repos.

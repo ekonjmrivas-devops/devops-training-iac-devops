@@ -9,13 +9,33 @@ Repositorio base de infraestructura como código (IaC) y estrategia DevOps usada
 - Este README se actualizará de forma incremental durante el curso.
 
 ## Repositorios del curso (ramas base)
-- App Python: https://github.com/contreras-adr/devops-training-2025-python-app/tree/feat/base
-- App Java: https://github.com/contreras-adr/devops-training-2025-java-app/tree/feat/base
-- IaC/DevOps: https://github.com/contreras-adr/devops-training-2025-iac-devops/tree/feat/base
+- App Python: https://github.com/contreras-adr/devops-training-python-app/tree/feat/base
+- App Java: https://github.com/contreras-adr/devops-training-java-app/tree/feat/base
+- IaC/DevOps: https://github.com/contreras-adr/devops-training-iac-devops/tree/feat/base
 
 ## Propósito del repositorio
 - Despliegue local de Jenkins y dependencias.
 - Material base para credenciales, pipelines y estrategia CI/CD.
+
+## Stack local (Docker Compose)
+El stack del laboratorio se levanta con:
+
+```bash
+docker-compose up -d
+```
+
+Servicios incluidos en `docker-compose.yml`:
+- `jenkins` (UI `localhost:8080`)
+- `dind` (Docker-in-Docker para ejecución de pipelines)
+- `registry` (`local-registry:5000`)
+- `artifactory` (`artifactory:8081`)
+
+Servicios opcionales (comentados en `docker-compose.yml`):
+- `sonarqube` + `sonardb` para análisis de calidad si se quiere ampliar el stack local.
+
+Nota de prácticas:
+- En la **Práctica 1** el foco es la instalación y configuración base de Jenkins.
+- `registry` y `artifactory` pasan a ser necesarios desde la **Práctica 2** (publicación de imágenes y artefactos).
 
 ## Casos prácticos (5)
 Habrá cinco casos prácticos, cada uno con una única rama de solución `training-x-title`.

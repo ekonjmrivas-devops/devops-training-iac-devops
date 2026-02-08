@@ -60,14 +60,14 @@ Reglas:
 
 ## Punto de partida: pipeline dummy (010)
 En cada repo (Python/Java) crea dos ficheros de referencia:
-- `.gitlab/010-gitlab-ci-dummy.yml` (plantilla inicial)
-- `.gitlab/020-gitlab-ci-solution.yml` (estructura final / guía, sin “código copiable”)
+- `.gitlab/gitlab-ci-dummy.yml` (plantilla inicial)
+- `.gitlab/gitlab-ci-template.yml` (estructura final / guía, sin “código copiable”)
 
 El fichero real que ejecuta GitLab CI/CD es:
 - `.gitlab-ci.yml`
 
 Ejercicio 0 (setup):
-1) Copia `.gitlab/010-gitlab-ci-dummy.yml` a `.gitlab-ci.yml`
+1) Copia `.gitlab/gitlab-ci-dummy.yml` a `.gitlab-ci.yml`
 2) Haz commit y push
 3) (Si ejecutas la práctica) revisa en GitLab:
    - CI/CD -> Pipelines
@@ -266,4 +266,4 @@ Referencias:
   - variables y reglas por rama
   - cleanup con `after_script`
 - Alternativamente (si no ejecutas):
-  - `.gitlab/010-gitlab-ci-dummy.yml` y `.gitlab/020-gitlab-ci-solution.yml` + `.gitlab-ci.yml` con la estructura final comentada
+  - `.gitlab/gitlab-ci-dummy.yml` y `.gitlab/gitlab-ci-template.yml` + `.gitlab-ci.yml` con la estructura final comentada
