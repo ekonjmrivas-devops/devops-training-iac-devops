@@ -17,6 +17,26 @@ Repositorio base de infraestructura como código (IaC) y estrategia DevOps usada
 - Despliegue local de Jenkins y dependencias.
 - Material base para credenciales, pipelines y estrategia CI/CD.
 
+## Stack local (Docker Compose)
+El stack del laboratorio se levanta con:
+
+```bash
+docker-compose up -d
+```
+
+Servicios incluidos en `docker-compose.yml`:
+- `jenkins` (UI `localhost:8080`)
+- `dind` (Docker-in-Docker para ejecución de pipelines)
+- `registry` (`local-registry:5000`)
+- `artifactory` (`artifactory:8081`)
+
+Servicios opcionales (comentados en `docker-compose.yml`):
+- `sonarqube` + `sonardb` para análisis de calidad si se quiere ampliar el stack local.
+
+Nota de prácticas:
+- En la **Práctica 1** el foco es la instalación y configuración base de Jenkins.
+- `registry` y `artifactory` pasan a ser necesarios desde la **Práctica 2** (publicación de imágenes y artefactos).
+
 ## Casos prácticos (5)
 Habrá cinco casos prácticos, cada uno con una única rama de solución `training-x-title`.
 - training-1-jenkins-config - enunciado: [training-1-jenkins-config.md](training-1-jenkins-config.md)

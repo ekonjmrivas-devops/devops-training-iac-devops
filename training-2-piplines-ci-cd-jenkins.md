@@ -302,7 +302,7 @@ post {
 Objetivo: hacer “publish” del artefacto imagen.
 
 Prerrequisito:
-- Levanta el servicio `registry` (comentado) en `devops-training-iac-devops/docker-compose.yml` y recuerda descomentar lo necesario.
+- Asegúrate de tener levantado el servicio `registry` en `devops-training-iac-devops/docker-compose.yml`.
 
 Tarea:
 - Añade un parámetro booleano `ENABLE_REGISTRY_PUSH`.
@@ -311,11 +311,11 @@ Tarea:
   - Autentica con credenciales de Jenkins (`local-registry-creds`)
   - Haz `push()`
 
-### Ejercicio 8 (opcional, Java) - Subir el artefacto (.jar) a Artifactory (sin plugin)
+### Ejercicio 9 (opcional, Java) - Subir el artefacto (.jar) a Artifactory (sin plugin)
 Objetivo: publicar el artefacto Java en un repositorio de artefactos usando un comando sencillo (sin depender del plugin de Artifactory en Jenkins).
 
 Prerrequisitos:
-- Levanta el servicio `artifactory` (comentado) en `devops-training-iac-devops/docker-compose.yml` (hay que descomentarlo).
+- Asegúrate de tener levantado el servicio `artifactory` en `devops-training-iac-devops/docker-compose.yml`.
 - Crea credenciales en Jenkins con ID `artifactory-creds` (usuario/password o token).
 
 Tarea (en el Jenkinsfile de Java, después de `make test`):
@@ -341,7 +341,7 @@ withCredentials([usernamePassword(
 }
 ```
 
-### Ejercicio 9 (opcional) - Refactor final: “mini libreria” para Compose
+### Ejercicio 10 (opcional) - Refactor final: “mini libreria” para Compose
 Objetivo: empaquetar el flujo CD para no repetirlo.
 
 Tarea:
@@ -349,7 +349,7 @@ Tarea:
   - `up`, `test`, `down`
 - Cambia el stage CD para usar esa función.
 
-### Ejercicio 10 (opcional, Java) - Usar `cd.Dockerfile` en la fase CD
+### Ejercicio 11 (opcional, Java) - Usar `cd.Dockerfile` en la fase CD
 Objetivo: construir una imagen “runtime” en CD usando `devops/cd.Dockerfile`.
 
 Tarea:
@@ -358,6 +358,54 @@ Tarea:
 
 Nota:
 - `cd.Dockerfile` copia el jar desde `./target/` y crea una imagen final con `openjdk:11-jre-slim`.
+
+### Ejercicio 12 (opcional) - Refactor con librería Groovy compartida
+Objetivo: sustituir funciones locales del Jenkinsfile por funciones reutilizables desde una librería compartida en el repo IaC.
+
+Contexto:
+- Librería del curso: `devops-training-iac-devops/groovy/vars/devopsLib.groovy`
+- Funciones disponibles:
+  - `runInDocker(String image, Closure body)`
+  - `composeUpTestDown(Map args)`
+  - `setComposeServiceImage(Map args)`
+  - `readVersion(String versionFile = "VERSION")`
+
+Paso a paso: registrar la librería en Jenkins
+1) Ir a:
+   - `Manage Jenkins -> System -> Global Trusted Pipeline Libraries`
+2) En “Global Trusted Pipeline Libraries”, pulsa “Add”.
+3) Configura:
+   - `Name`: `iac-devops-lib`
+   - `Default version`: `feat/base` (o la rama donde tengas la librería)
+   - Marca “Allow default version to be overridden” (opcional recomendado)
+4) En “Retrieval method”, selecciona:
+   - `Modern SCM` -> `Git`
+   - URL del repo IaC:
+     - `https://github.com/contreras-adr/devops-training-iac-devops.git`
+   - Credenciales (si el repo no es público)
+5) Define `Library Path`:
+   - `groovy`
+6) Guarda y vuelve al pipeline.
+
+Referencias útiles (Shared Libraries):
+- Jenkins Shared Libraries (guía principal): https://www.jenkins.io/doc/book/pipeline/shared-libraries/
+- Global Shared Libraries (configuración en Jenkins): https://www.jenkins.io/doc/book/pipeline/shared-libraries/#global-shared-libraries
+- Carga dinámica con `library` step: https://www.jenkins.io/doc/book/pipeline/shared-libraries/#loading-libraries-dynamically
+
+Tarea de refactor en cada repo (Python y Java):
+- Elimina funciones locales (`runInDocker`, `composeUpTestDown`) del Jenkinsfile.
+- Importa la librería al inicio:
+```groovy
+@Library('iac-devops-lib') _
+```
+- Sustituye llamadas:
+  - `runInDocker(...)` -> `devopsLib.runInDocker(...)`
+  - `composeUpTestDown(...)` -> `devopsLib.composeUpTestDown(...)`
+- Usa `devopsLib.readVersion('VERSION')` para leer la versión de imagen desde el fichero `VERSION` en la raíz del repo.
+- Antes de CD, usa `devopsLib.setComposeServiceImage(...)` para actualizar en `docker-compose.yml` la imagen del servicio de app.
+
+Referencia de plantilla:
+- `devops-training-iac-devops/jenkins/Jenkinsfile-template-ejercicio-optional`
 
 ## Entregables
 - `devops/jenkinsfile` actualizado (nueva versión) en ambos repos.
