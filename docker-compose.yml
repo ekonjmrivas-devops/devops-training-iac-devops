@@ -119,3 +119,20 @@ services:
   #     devops_training_net:
   #       aliases:
   #         - sonardb
+
+  github-runner:
+    image: myoung34/github-runner:latest
+    restart: unless-stopped
+    profiles:
+      - github-runner
+    networks:
+      - devops_training_net
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - REPO_URL=${GITHUB_RUNNER_REPO_URL}
+      - RUNNER_TOKEN=${GITHUB_RUNNER_TOKEN}
+      - RUNNER_NAME=${GITHUB_RUNNER_NAME:-local-runner-01}
+      - LABELS=${GITHUB_RUNNER_LABELS:-self-hosted,linux,docker}
+      - RUNNER_WORKDIR=/tmp/github-runner
+
