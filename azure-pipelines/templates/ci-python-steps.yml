@@ -1,26 +1,15 @@
 # Template (Azure Pipelines) - CI Python (steps)
-#
-# Este template es un punto de partida para reutilizar steps de CI en varios repos.
-# En la Práctica 5 se pide que ambos proyectos consuman templates desde el repo IaC.
+# fix: PIP_USER=0 y HOME=/tmp para evitar permisos root 
+# fix: template usa ci.Dockerfile con codigo incluido
 
 parameters:
   pythonImage: "python:3.6-slim"
+
 steps:
   - script: |
-      docker run --rm \
-        -v $(pwd):/app \
-        -w /app \
-        --user $(id -u):$(id -g) \
-        -e PIP_CACHE_DIR=/app/.pip-cache \
-        ${{ parameters.pythonImage }} \
-        sh -c "pip install -q --no-cache-dir -r requirements.txt && flake8 src/ && python -m black -l 79 -t py311 --check src/ tests/"
+      docker build -f devops/ci.Dockerfile -t ci-tools-python .
+      docker run --rm ci-tools-python make lint
     displayName: "Lint (flake8 + black)"
   - script: |
-      docker run --rm \
-        -v $(pwd):/app \
-        -w /app \
-        --user $(id -u):$(id -g) \
-        -e PIP_CACHE_DIR=/app/.pip-cache \
-        ${{ parameters.pythonImage }} \
-        sh -c "pip install -q --no-cache-dir -r requirements.txt && coverage run -m pytest -v --tb=short --maxfail=1 tests/"
+      docker run --rm ci-tools-python make test
     displayName: "Test (pytest + coverage)"
