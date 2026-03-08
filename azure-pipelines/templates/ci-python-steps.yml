@@ -5,13 +5,21 @@
 
 parameters:
   pythonImage: "python:3.6-slim"
-  requirementsFile: "requirements.txt"
-  testCommand: "pytest -q"
 
 steps:
   - script: |
-      echo "TODO: ejecutar en contenedor: ${{ parameters.pythonImage }}"
-      echo "TODO: pip install -r ${{ parameters.requirementsFile }}"
-      echo "TODO: ${{ parameters.testCommand }}"
-    displayName: "CI Python (TODO)"
-
+      docker run --rm \
+        -v $(pwd):/app \
+        -w /app \
+        --user $(id -u):$(id -g) \
+        ${{ parameters.pythonImage }} \
+        sh -c "pip install -q -r requirements.txt && flake8 src/ && python -m black -l 79 -t py311 --check src/ tests/"
+    displayName: "Lint (flake8 + black)"
+  - script: |
+      docker run --rm \
+        -v $(pwd):/app \
+        -w /app \
+        --user $(id -u):$(id -g) \
+        ${{ parameters.pythonImage }} \
+        sh -c "pip install -q -r requirements.txt && coverage run -m pytest -v --tb=short --maxfail=1 tests/"
+    displayName: "Test (pytest + coverage)"
