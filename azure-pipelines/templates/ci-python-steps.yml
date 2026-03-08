@@ -5,21 +5,22 @@
 
 parameters:
   pythonImage: "python:3.6-slim"
-
 steps:
   - script: |
       docker run --rm \
         -v $(pwd):/app \
         -w /app \
         --user $(id -u):$(id -g) \
+        -e PIP_CACHE_DIR=/app/.pip-cache \
         ${{ parameters.pythonImage }} \
-        sh -c "pip install -q -r requirements.txt && flake8 src/ && python -m black -l 79 -t py311 --check src/ tests/"
+        sh -c "pip install -q --no-cache-dir -r requirements.txt && flake8 src/ && python -m black -l 79 -t py311 --check src/ tests/"
     displayName: "Lint (flake8 + black)"
   - script: |
       docker run --rm \
         -v $(pwd):/app \
         -w /app \
         --user $(id -u):$(id -g) \
+        -e PIP_CACHE_DIR=/app/.pip-cache \
         ${{ parameters.pythonImage }} \
-        sh -c "pip install -q -r requirements.txt && coverage run -m pytest -v --tb=short --maxfail=1 tests/"
+        sh -c "pip install -q --no-cache-dir -r requirements.txt && coverage run -m pytest -v --tb=short --maxfail=1 tests/"
     displayName: "Test (pytest + coverage)"
