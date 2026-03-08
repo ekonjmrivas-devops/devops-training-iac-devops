@@ -4,17 +4,23 @@
 
 parameters:
   mavenImage: "maven:3.8.6-openjdk-11-slim"
-  lintCommand: "make lint"
-  testCommand: "make test"
 
 steps:
   - script: |
-      echo "TODO: ejecutar en contenedor: ${{ parameters.mavenImage }}"
-      echo "TODO: ${{ parameters.lintCommand }}"
-    displayName: "Lint (TODO)"
-
+      docker run --rm \
+        -v $(pwd):/app \
+        -w /app \
+        --user $(id -u):$(id -g) \
+        -e MAVEN_OPTS="-Dmaven.repo.local=/app/.m2" \
+        ${{ parameters.mavenImage }} \
+        mvn -q -Dmaven.repo.local=/app/.m2 -DskipTests=true test
+    displayName: "Lint (mvn compile sin tests)"
   - script: |
-      echo "TODO: ejecutar en contenedor: ${{ parameters.mavenImage }}"
-      echo "TODO: ${{ parameters.testCommand }}"
-    displayName: "Test (TODO)"
-
+      docker run --rm \
+        -v $(pwd):/app \
+        -w /app \
+        --user $(id -u):$(id -g) \
+        -e MAVEN_OPTS="-Dmaven.repo.local=/app/.m2" \
+        ${{ parameters.mavenImage }} \
+        mvn -q -Dmaven.repo.local=/app/.m2 test
+    displayName: "Test (mvn test)"
