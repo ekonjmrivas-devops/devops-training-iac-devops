@@ -14,14 +14,19 @@ steps:
       echo "==> Deploy en $(DEPLOY_ENV) con imagen $IMAGE_NAME"
       docker compose -f ${{ parameters.composeFile }} up -d ${{ parameters.composeService }}
     displayName: "docker compose up"
+    env:
+      IMAGE_NAME: ${{ parameters.imageRepo }}:${{ parameters.imageTag }}
   - script: |
       sleep 3
       docker compose -f ${{ parameters.composeFile }} logs ${{ parameters.composeService }}
     displayName: "Logs del servicio"
+    env:
+      IMAGE_NAME: ${{ parameters.imageRepo }}:${{ parameters.imageTag }}
   - script: |
-      export IMAGE_NAME=${{ parameters.imageRepo }}:${{ parameters.imageTag }}
       docker compose -f ${{ parameters.composeFile }} down --volumes --remove-orphans || true
       docker rmi ${{ parameters.imageRepo }}:${{ parameters.imageTag }} || true
       echo "Cleanup completado"
     displayName: "Cleanup (always)"
     condition: always()
+    env:
+      IMAGE_NAME: ${{ parameters.imageRepo }}:${{ parameters.imageTag }}
