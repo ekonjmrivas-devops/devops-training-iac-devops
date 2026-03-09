@@ -1,6 +1,7 @@
 # Template (Azure Pipelines) - CD con Docker Compose (steps)
 #
 # Template reutilizable para simular CD: up -> logs -> down (siempre).
+
 parameters:
   composeFile: "docker-compose.yml"
   composeService: "app"
@@ -9,7 +10,8 @@ parameters:
 
 steps:
   - script: |
-      echo "==> Deploy en $(DEPLOY_ENV)"
+      export IMAGE_NAME=${{ parameters.imageRepo }}:${{ parameters.imageTag }}
+      echo "==> Deploy en $(DEPLOY_ENV) con imagen $IMAGE_NAME"
       docker compose -f ${{ parameters.composeFile }} up -d ${{ parameters.composeService }}
     displayName: "docker compose up"
   - script: |
@@ -17,6 +19,7 @@ steps:
       docker compose -f ${{ parameters.composeFile }} logs ${{ parameters.composeService }}
     displayName: "Logs del servicio"
   - script: |
+      export IMAGE_NAME=${{ parameters.imageRepo }}:${{ parameters.imageTag }}
       docker compose -f ${{ parameters.composeFile }} down --volumes --remove-orphans || true
       docker rmi ${{ parameters.imageRepo }}:${{ parameters.imageTag }} || true
       echo "Cleanup completado"
