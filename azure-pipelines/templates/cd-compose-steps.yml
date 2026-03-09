@@ -1,26 +1,24 @@
 # Template (Azure Pipelines) - CD con Docker Compose (steps)
 #
-# Template reutilizable para simular CD: up -> e2e -> down (siempre).
-
+# Template reutilizable para simular CD: up -> logs -> down (siempre).
 parameters:
-  mavenImage: "maven:3.8.6-openjdk-11-slim"
+  composeFile: "docker-compose.yml"
+  composeService: "app"
+  imageRepo: ""
+  imageTag: ""
 
 steps:
   - script: |
-      docker run --rm \
-        -v $(pwd):/app \
-        -w /app \
-        --user $(id -u):$(id -g) \
-        -e MAVEN_OPTS="-Dmaven.repo.local=/app/.m2" \
-        ${{ parameters.mavenImage }} \
-        mvn -q -Dmaven.repo.local=/app/.m2 -DskipTests=true test
-    displayName: "Lint (mvn compile sin tests)"
+      echo "==> Deploy en $(DEPLOY_ENV)"
+      docker compose -f ${{ parameters.composeFile }} up -d ${{ parameters.composeService }}
+    displayName: "docker compose up"
   - script: |
-      docker run --rm \
-        -v $(pwd):/app \
-        -w /app \
-        --user $(id -u):$(id -g) \
-        -e MAVEN_OPTS="-Dmaven.repo.local=/app/.m2" \
-        ${{ parameters.mavenImage }} \
-        mvn -q -Dmaven.repo.local=/app/.m2 test
-    displayName: "Test (mvn test)"
+      sleep 3
+      docker compose -f ${{ parameters.composeFile }} logs ${{ parameters.composeService }}
+    displayName: "Logs del servicio"
+  - script: |
+      docker compose -f ${{ parameters.composeFile }} down --volumes --remove-orphans || true
+      docker rmi ${{ parameters.imageRepo }}:${{ parameters.imageTag }} || true
+      echo "Cleanup completado"
+    displayName: "Cleanup (always)"
+    condition: always()
