@@ -1,15 +1,20 @@
 # Template (Azure Pipelines) - CI SonarQube Analysis (steps)
 # Reemplazamos mavenImage compatible con Java17
 # Añadimos paso de compilación
-
+# Añadimos JaCoCo coverage report
 parameters:
-  # mavenImage: "maven:3.8.6-openjdk-11-slim"
   mavenImage: "maven:3.9-eclipse-temurin-17"
   sonarHostUrl: "http://192.168.50.201:9000"
   sonarProjectKey: "DevOps"
   sonarToken: ""
 
 steps:
+  - task: DownloadPipelineArtifact@2
+    displayName: "Descargar reporte JaCoCo"
+    inputs:
+      artifactName: "jacoco-report"
+      targetPath: "$(System.DefaultWorkingDirectory)/target/site/jacoco"
+
   - script: |
       docker run --rm \
         -v $(pwd):/app \
@@ -34,5 +39,6 @@ steps:
           -Dsonar.token=${{ parameters.sonarToken }} \
           -Dsonar.java.binaries=target/classes \
           -Dsonar.sources=src/main/java \
-          -Dsonar.tests=src/test/java
+          -Dsonar.tests=src/test/java \
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
     displayName: "SonarQube Analysis"
