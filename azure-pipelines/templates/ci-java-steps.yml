@@ -36,8 +36,8 @@ steps:
         -e MAVEN_OPTS="-Dmaven.repo.local=/app/.m2" \
         ${{ parameters.mavenImage }} \
         mvn -q -Dmaven.repo.local=/app/.m2 \
-        -Dselenium.host=selenium \
-        -Ddocker.host=$DOCKER_HOST_IP \
+        "-Dselenium.host=selenium" \
+        "-Ddocker.host=$DOCKER_HOST_IP" \
         test
 
       docker stop selenium || true
