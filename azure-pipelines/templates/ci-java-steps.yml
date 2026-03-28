@@ -25,25 +25,23 @@ steps:
 
       sleep 5
 
-      DOCKER_HOST_IP=$(ip route | grep default | awk '{print $3}' | head -1)
-      echo "Docker host IP: $DOCKER_HOST_IP"
-
-      # Puerto fijo para Spring Boot en el contenedor
-      APP_PORT=8080
-
+      # Obtener IP del contenedor Maven en selenium-net tras arrancarlo
+      # El propio contenedor Maven conoce su IP — la pasamos como propiedad
       docker run --rm \
         -v $(pwd):/app \
         -w /app \
         --network selenium-net \
+        --name maven-test \
         --user $(id -u):$(id -g) \
         -e MAVEN_OPTS="-Dmaven.repo.local=/app/.m2" \
-        -e SERVER_PORT=$APP_PORT \
         ${{ parameters.mavenImage }} \
-        mvn -q -Dmaven.repo.local=/app/.m2 \
-        "-Dselenium.host=selenium" \
-        "-Ddocker.host=$DOCKER_HOST_IP" \
-        "-Dserver.port=$APP_PORT" \
-        test
+        sh -c '
+          APP_HOST=$(hostname -i | awk "{print \$1}") &&
+          mvn -q -Dmaven.repo.local=/app/.m2
+          "-Dselenium.host=selenium"
+          "-Dapp.host=$APP_HOST"
+          test
+        '
 
       docker stop selenium || true
       docker network rm selenium-net || true
