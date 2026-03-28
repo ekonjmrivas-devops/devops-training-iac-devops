@@ -16,20 +16,18 @@ steps:
     displayName: "Lint (mvn compile sin tests)"
 
   - script: |
-      # 1. Crear red Docker compartida
       docker network create selenium-net || true
 
-      # 2. Levantar Selenium standalone Chrome como sidecar
       docker run -d --rm \
         --name selenium \
         --network selenium-net \
-        -p 4444:4444 \
         selenium/standalone-chrome:latest
 
-      # 3. Esperar a que Selenium esté listo
       sleep 5
 
-      # 4. Correr los tests conectando Maven a la misma red
+      # Obtener IP del host en la red Docker
+      DOCKER_HOST_IP=$(ip route | grep default | awk '{print $3}')
+
       docker run --rm \
         -v $(pwd):/app \
         -w /app \
@@ -37,9 +35,11 @@ steps:
         --user $(id -u):$(id -g) \
         -e MAVEN_OPTS="-Dmaven.repo.local=/app/.m2" \
         ${{ parameters.mavenImage }} \
-        mvn -q -Dmaven.repo.local=/app/.m2 test
+        mvn -q -Dmaven.repo.local=/app/.m2 \
+        -Dselenium.host=selenium \
+        -Ddocker.host=$DOCKER_HOST_IP \
+        test
 
-      # 5. Parar el contenedor Selenium
       docker stop selenium || true
       docker network rm selenium-net || true
     displayName: "Test (mvn test) + JaCoCo"
