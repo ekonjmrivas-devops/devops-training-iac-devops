@@ -26,7 +26,8 @@ steps:
       sleep 5
 
       # Obtener IP del host en la red Docker
-      DOCKER_HOST_IP=$(ip route | grep default | awk '{print $3}')
+      DOCKER_HOST_IP=$(ip route | grep default | awk '{print $3}' | head -1)
+      echo "Docker host IP: $DOCKER_HOST_IP"
 
       docker run --rm \
         -v $(pwd):/app \
