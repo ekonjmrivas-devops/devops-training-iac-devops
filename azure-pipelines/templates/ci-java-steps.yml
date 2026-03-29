@@ -18,6 +18,7 @@ steps:
       docker run -d --rm \
         --name selenium \
         --network selenium-net \
+        --shm-size=2g \
         selenium/standalone-chrome:4.41.0
       sleep 15
       docker run --rm \
