@@ -19,7 +19,7 @@ steps:
         --name selenium \
         --network selenium-net \
         selenium/standalone-chrome:4.41.0
-      sleep 5
+      sleep 15
       docker run --rm \
         -v $(pwd):/app \
         -w /app \
